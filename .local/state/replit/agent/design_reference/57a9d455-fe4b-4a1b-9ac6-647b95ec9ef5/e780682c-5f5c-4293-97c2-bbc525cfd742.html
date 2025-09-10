@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeetingFlow - AI-Powered Meeting Transcription for Newsletter Publishers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    popover: {
+                        DEFAULT: "var(--popover)",
+                        foreground: "var(--popover-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                },
+                fontFamily: {
+                    sans: ["var(--font-sans)"],
+                }
+            },
+        }
+    };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --background: hsl(60 9% 98%);
+            --foreground: hsl(222 84% 5%);
+            --card: hsl(0 0% 100%);
+            --card-foreground: hsl(222 84% 5%);
+            --popover: hsl(0 0% 100%);
+            --popover-foreground: hsl(222 84% 5%);
+            --primary: hsl(239 84% 67%);
+            --primary-foreground: hsl(0 0% 98%);
+            --secondary: hsl(215 16% 47%);
+            --secondary-foreground: hsl(222 84% 5%);
+            --muted: hsl(210 40% 96%);
+            --muted-foreground: hsl(215 16% 47%);
+            --accent: hsl(160 84% 39%);
+            --accent-foreground: hsl(0 0% 98%);
+            --destructive: hsl(0 84% 60%);
+            --destructive-foreground: hsl(0 0% 98%);
+            --border: hsl(214 32% 91%);
+            --input: hsl(214 32% 91%);
+            --ring: hsl(239 84% 67%);
+            --radius: 0.5rem;
+            --font-sans: 'Inter', sans-serif;
+        }
+        
+        .font-sans {
+            font-family: var(--font-sans);
+        }
+        
+        .streaming-text {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .action-item {
+            background: linear-gradient(135deg, hsl(160 84% 39% / 0.1), hsl(160 84% 39% / 0.05));
+            border-left: 4px solid hsl(160 84% 39%);
+        }
+        
+        .connection-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: hsl(160 84% 39%);
+            animation: connectionPulse 2s infinite;
+        }
+        
+        @keyframes connectionPulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-background font-sans">
+    <!-- @COMPONENT: AppLayout -->
+    <div class="min-h-screen flex">
+        <!-- Sidebar Navigation -->
+        <!-- @COMPONENT: Sidebar -->
+        <aside class="w-64 bg-card border-r border-border flex-shrink-0">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-microphone text-primary-foreground"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-semibold text-foreground">MeetingFlow</h1>
+                        <p class="text-xs text-muted-foreground">AI Transcription</p>
+                    </div>
+                </div>
+                
+                <nav class="space-y-2">
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 bg-primary/10 text-primary rounded-md">
+                        <i class="fas fa-home w-4"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-muted-foreground hover:bg-muted rounded-md">
+                        <i class="fas fa-play w-4"></i>
+                        <span>Live Transcription</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-muted-foreground hover:bg-muted rounded-md">
+                        <i class="fas fa-history w-4"></i>
+                        <span>Meeting History</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-muted-foreground hover:bg-muted rounded-md">
+                        <i class="fas fa-tasks w-4"></i>
+                        <span>Action Items</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-muted-foreground hover:bg-muted rounded-md">
+                        <i class="fas fa-plug w-4"></i>
+                        <span>Integrations</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-muted-foreground hover:bg-muted rounded-md">
+                        <i class="fas fa-cog w-4"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-muted rounded-lg p-4">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <div class="connection-indicator"></div>
+                        <span class="text-sm font-medium text-foreground">Connected</span>
+                    </div>
+                    <p class="text-xs text-muted-foreground">WebSocket streaming active</p>
+                </div>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-hidden">
+            <!-- Header -->
+            <!-- @COMPONENT: Header -->
+            <header class="bg-card border-b border-border px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold text-foreground">Live Meeting Transcription</h2>
+                        <p class="text-sm text-muted-foreground">Real-time AI-powered transcription with action item extraction</p>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- Connection Status -->
+                        <div class="flex items-center space-x-2 bg-accent/10 px-3 py-1 rounded-full">
+                            <div class="w-2 h-2 bg-accent rounded-full"></div>
+                            <span class="text-sm font-medium text-accent">50+ users online</span>
+                        </div>
+                        
+                        <!-- User Profile -->
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                                <span class="text-sm font-medium text-primary-foreground" data-bind="user.initials">JS</span>
+                            </div>
+                            <div class="text-sm">
+                                <p class="font-medium text-foreground" data-bind="user.name">John Smith</p>
+                                <p class="text-muted-foreground" data-bind="user.role">Newsletter Publisher</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: Header -->
+
+            <!-- Main Dashboard Content -->
+            <div class="flex h-[calc(100vh-80px)]">
+                <!-- Left Panel - Transcription -->
+                <!-- @COMPONENT: TranscriptionPanel -->
+                <div class="flex-1 p-6">
+                    <div class="bg-card rounded-lg border border-border h-full flex flex-col">
+                        <!-- Transcription Header -->
+                        <div class="p-4 border-b border-border">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <h3 class="font-semibold text-foreground">Real-time Transcription</h3>
+                                    <div class="flex items-center space-x-2 text-sm text-muted-foreground">
+                                        <i class="fas fa-clock"></i>
+                                        <span data-bind="meeting.duration">23:45</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-2">
+                                    <button class="px-3 py-1 bg-destructive text-destructive-foreground rounded-md text-sm font-medium" data-event="click:stopRecording">
+                                        <i class="fas fa-stop mr-1"></i>
+                                        Stop Recording
+                                    </button>
+                                    <button class="px-3 py-1 bg-secondary text-secondary-foreground rounded-md text-sm" data-event="click:pauseRecording">
+                                        <i class="fas fa-pause mr-1"></i>
+                                        Pause
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Transcription Content -->
+                        <div class="flex-1 p-4 overflow-y-auto space-y-4" data-mock="true">
+                            <!-- Speaker 1 -->
+                            <div class="flex space-x-3">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-xs font-medium text-white">AM</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="font-medium text-foreground">Alice Miller</span>
+                                        <span class="text-xs text-muted-foreground">2:34 PM</span>
+                                    </div>
+                                    <p class="text-foreground">Welcome everyone to today's newsletter planning meeting. We need to discuss our Q4 content strategy and finalize the holiday campaign timeline.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Speaker 2 -->
+                            <div class="flex space-x-3">
+                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-xs font-medium text-white">BJ</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="font-medium text-foreground">Bob Johnson</span>
+                                        <span class="text-xs text-muted-foreground">2:35 PM</span>
+                                    </div>
+                                    <p class="text-foreground">Great, I've prepared the analytics from our last three campaigns. We should definitely focus on the segments that performed best - our tech review content had 45% higher open rates.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Current Streaming Text -->
+                            <div class="flex space-x-3">
+                                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-xs font-medium text-white">CM</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="font-medium text-foreground">Carol Martinez</span>
+                                        <span class="text-xs text-muted-foreground">2:36 PM</span>
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Live</span>
+                                    </div>
+                                    <p class="text-foreground streaming-text">That's excellent data. I think we should also look at integrating more interactive content this quarter. Maybe we can schedule a follow-up meeting to discuss the technical implementation...</p>
+                                </div>
+                            </div>
+                            
+                            <!-- @FUNCTIONALITY: This transcription area should implement WebSocket streaming for real-time text updates -->
+                        </div>
+                        
+                        <!-- Transcription Controls -->
+                        <div class="p-4 border-t border-border bg-muted/50">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-microphone text-accent"></i>
+                                    <span class="text-sm text-muted-foreground">Audio quality: Excellent</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-users text-secondary"></i>
+                                    <span class="text-sm text-muted-foreground">3 speakers detected</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-language text-primary"></i>
+                                    <span class="text-sm text-muted-foreground">Language: English (US)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: TranscriptionPanel -->
+
+                <!-- Right Panel - Action Items & Analysis -->
+                <!-- @COMPONENT: ActionItemsPanel -->
+                <div class="w-96 p-6">
+                    <div class="space-y-6">
+                        <!-- Action Items -->
+                        <div class="bg-card rounded-lg border border-border">
+                            <div class="p-4 border-b border-border">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="font-semibold text-foreground">Action Items</h3>
+                                    <span class="bg-accent/10 text-accent px-2 py-1 rounded-full text-xs font-medium">Auto-detected</span>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 space-y-3" data-mock="true">
+                                <!-- @MAP: actionItems.map(item => ( -->
+                                <div class="action-item p-3 rounded-md">
+                                    <div class="flex items-start justify-between mb-2">
+                                        <h4 class="font-medium text-foreground text-sm">Review Q4 content strategy</h4>
+                                        <button class="text-muted-foreground hover:text-foreground" data-event="click:toggleActionItem">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-sm text-muted-foreground mb-2">Analyze last three campaigns and focus on high-performing segments</p>
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-muted-foreground">Assigned: Alice Miller</span>
+                                        <span class="text-muted-foreground">Due: This week</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="action-item p-3 rounded-md">
+                                    <div class="flex items-start justify-between mb-2">
+                                        <h4 class="font-medium text-foreground text-sm">Schedule follow-up meeting</h4>
+                                        <button class="text-muted-foreground hover:text-foreground" data-event="click:toggleActionItem">
+                                            <i class="far fa-square"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-sm text-muted-foreground mb-2">Discuss technical implementation of interactive content</p>
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-muted-foreground">Assigned: Carol Martinez</span>
+                                        <span class="text-muted-foreground">Due: Next week</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="action-item p-3 rounded-md">
+                                    <div class="flex items-start justify-between mb-2">
+                                        <h4 class="font-medium text-foreground text-sm">Finalize holiday campaign timeline</h4>
+                                        <button class="text-muted-foreground hover:text-foreground" data-event="click:toggleActionItem">
+                                            <i class="far fa-square"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-sm text-muted-foreground mb-2">Set deadlines and deliverables for holiday content</p>
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-muted-foreground">Assigned: Team</span>
+                                        <span class="text-muted-foreground">Due: End of week</span>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                            
+                            <div class="p-4 border-t border-border">
+                                <button class="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md text-sm font-medium hover:bg-primary/90" data-event="click:exportActionItems">
+                                    <i class="fas fa-download mr-2"></i>
+                                    Export to Task Manager
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Meeting Insights -->
+                        <div class="bg-card rounded-lg border border-border">
+                            <div class="p-4 border-b border-border">
+                                <h3 class="font-semibold text-foreground">AI Insights</h3>
+                            </div>
+                            
+                            <div class="p-4 space-y-4" data-mock="true">
+                                <div class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-md">
+                                    <h4 class="font-medium text-blue-900 text-sm mb-1">Key Topics</h4>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Q4 Strategy</span>
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Analytics</span>
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Holiday Campaign</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-green-50 border-l-4 border-green-400 p-3 rounded-r-md">
+                                    <h4 class="font-medium text-green-900 text-sm mb-1">Sentiment Analysis</h4>
+                                    <p class="text-green-700 text-sm">Positive and collaborative tone throughout the meeting</p>
+                                </div>
+                                
+                                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-md">
+                                    <h4 class="font-medium text-yellow-900 text-sm mb-1">Next Steps</h4>
+                                    <p class="text-yellow-700 text-sm">3 action items identified, 2 follow-up meetings suggested</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Integration Quick Actions -->
+                        <div class="bg-card rounded-lg border border-border">
+                            <div class="p-4 border-b border-border">
+                                <h3 class="font-semibold text-foreground">Quick Export</h3>
+                            </div>
+                            
+                            <div class="p-4 space-y-2">
+                                <button class="w-full flex items-center space-x-3 p-3 bg-muted hover:bg-muted/80 rounded-md text-sm" data-event="click:exportToNotion">
+                                    <i class="fab fa-notion text-xl"></i>
+                                    <span class="font-medium">Export to Notion</span>
+                                </button>
+                                
+                                <button class="w-full flex items-center space-x-3 p-3 bg-muted hover:bg-muted/80 rounded-md text-sm" data-event="click:exportToTrello">
+                                    <i class="fab fa-trello text-xl text-blue-600"></i>
+                                    <span class="font-medium">Export to Trello</span>
+                                </button>
+                                
+                                <button class="w-full flex items-center space-x-3 p-3 bg-muted hover:bg-muted/80 rounded-md text-sm" data-event="click:exportToSlack">
+                                    <i class="fab fa-slack text-xl text-purple-600"></i>
+                                    <span class="font-medium">Send to Slack</span>
+                                </button>
+                                
+                                <button class="w-full flex items-center space-x-3 p-3 bg-muted hover:bg-muted/80 rounded-md text-sm" data-event="click:exportToEmail">
+                                    <i class="fas fa-envelope text-xl text-red-500"></i>
+                                    <span class="font-medium">Email Summary</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: ActionItemsPanel -->
+            </div>
+        </main>
+    </div>
+    <!-- @END_COMPONENT: AppLayout -->
+
+    <!-- WebSocket Connection Manager -->
+    <script>
+    (function() {
+        // TODO: Implement WebSocket connection management for real-time transcription
+        // TODO: Handle reconnection logic and connection state management
+        // TODO: Integrate with OpenAI streaming API for real-time processing
+        // TODO: Implement conversation context and memory management
+        
+        // Mock WebSocket simulation for demo purposes
+        const connectionStatus = document.querySelector('.connection-indicator');
+        const streamingText = document.querySelector('.streaming-text');
+        
+        // Simulate connection health monitoring
+        setInterval(() => {
+            connectionStatus.style.opacity = connectionStatus.style.opacity === '0.5' ? '1' : '0.5';
+        }, 2000);
+        
+        // Simulate real-time text streaming
+        let isStreaming = true;
+        const words = [' and', ' we', ' should', ' definitely', ' consider', ' the', ' user', ' feedback', ' from', ' last', ' quarter.'];
+        let wordIndex = 0;
+        
+        if (streamingText) {
+            setInterval(() => {
+                if (isStreaming && wordIndex < words.length) {
+                    streamingText.textContent += words[wordIndex];
+                    wordIndex++;
+                }
+            }, 1500);
+        }
+        
+        console.log('MeetingFlow: WebSocket connection manager initialized');
+        console.log('MeetingFlow: Ready for real-time transcription streaming');
+    })();
+    </script>
+</body>
+</html>

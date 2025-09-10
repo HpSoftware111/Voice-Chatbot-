@@ -1,0 +1,99 @@
+Project Requirements: FastAPI Chatbot with Reliable Streaming & On-Brand AI Replies
+Overview
+
+We currently run a chatbot built on FastAPI that streams responses over WebSockets. While functional, the system faces two challenges:
+
+Unstable streaming (sockets freeze mid-response).
+
+Generic AI answers (not sufficiently tailored or engaging).
+
+We need a developer to stabilize the real-time response pipeline and refine the chatbot’s conversation style using OpenAI’s APIs (or similar LLMs).
+
+Functional Requirements
+1. WebSocket Debugging & Reliability
+
+Ensure real-time streaming responses are delivered without freezing or early termination.
+
+Handle edge cases: dropped connections, network instability, user disconnect/reconnect.
+
+Implement proper timeout and reconnection handling.
+
+Add logging and monitoring hooks for debugging future socket issues.
+
+2. OpenAI Integration Improvements
+
+Current replies sound generic; refine prompt structure and context passing.
+
+Use system + user + contextual prompts to enforce brand tone and persona.
+
+Explore few-shot prompting to improve consistency across sessions.
+
+Maintain conversation memory (short-term context) so answers feel connected, not isolated.
+
+3. Response Quality & Brand Alignment
+
+Adjust responses to be:
+
+More natural – like a human chat, not robotic.
+
+Brand-specific – tailored to our industry/domain (tone of voice guidelines will be provided).
+
+Helpful & concise – avoiding generic filler text.
+
+Add rules for fallback replies (when OpenAI produces irrelevant output).
+
+4. Performance & Scalability
+
+Optimize FastAPI routes for low latency streaming.
+
+Ensure the system can handle concurrent WebSocket clients.
+
+Optionally support token streaming from OpenAI directly to WebSocket (minimal buffering).
+
+5. Developer Documentation
+
+Provide clear documentation covering:
+
+WebSocket flow & streaming logic.
+
+Prompt design decisions & tuning process.
+
+How to extend or update the bot’s “personality”.
+
+Include environment setup instructions for local development.
+
+Technical Requirements
+
+Backend: FastAPI (Python 3.9+)
+
+WebSockets: Native FastAPI WebSockets or starlette.websockets
+
+LLM Integration: OpenAI API (ChatCompletion / Streaming endpoints)
+
+Data Layer (optional): Redis or Postgres for conversation history
+
+Deployment: Docker + AWS/GCP/Azure (current infra details will be shared)
+
+Monitoring: Logging via Python’s logging or external tool (Sentry, Datadog, etc.)
+
+Deliverables
+
+Stable FastAPI WebSocket Server – no freezes, robust against disconnects.
+
+Refined AI Responses – aligned with brand voice, contextual, human-like.
+
+Prompting Framework – structured system & user prompts with examples.
+
+Documentation – setup, usage, and developer notes.
+
+(Optional) Conversation memory system for improved context awareness.
+
+Success Criteria
+
+Chatbot streams replies smoothly with no mid-response hangs.
+
+Replies sound on-brand, natural, and context-aware.
+
+System handles at least 50 concurrent users without streaming issues.
+
+Developer handover includes full documentation for maintainability.
